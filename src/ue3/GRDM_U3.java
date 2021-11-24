@@ -34,11 +34,10 @@ public class GRDM_U3 implements PlugIn {
     private int width;
     private int height;
 
-    String[] items = {"Original", "Rot-Kanal", "Graustufen"};
+    String[] items = {"Original", "Rot-Kanal", "Graustufen", "Binär", "Binär mit Fehlerdiffusion", "Sepia"};
 
 
     public static void main(String args[]) {
-
         IJ.open("resources/Bear.jpg");
 
         GRDM_U3 pw = new GRDM_U3();
@@ -63,18 +62,15 @@ public class GRDM_U3 implements PlugIn {
     private void storePixelValues(ImageProcessor ip) {
         width = ip.getWidth();
         height = ip.getHeight();
-
         origPixels = ((int []) ip.getPixels()).clone();
     }
 
 
     class CustomCanvas extends ImageCanvas {
-
         CustomCanvas(ImagePlus imp) {
             super(imp);
         }
-
-    } // CustomCanvas inner class
+    }
 
 
     class CustomWindow extends ImageWindow implements ItemListener {
@@ -99,7 +95,6 @@ public class GRDM_U3 implements PlugIn {
         }
 
         public void itemStateChanged(ItemEvent evt) {
-
             // Get the affected item
             Object item = evt.getItem();
 
@@ -114,47 +109,77 @@ public class GRDM_U3 implements PlugIn {
 
 
         private void changePixelValues(ImageProcessor ip) {
-
             // Array zum Zurückschreiben der Pixelwerte
             int[] pixels = (int[])ip.getPixels();
 
             if (method.equals("Original")) {
-
-                for (int y=0; y<height; y++) {
-                    for (int x=0; x<width; x++) {
-                        int pos = y*width + x;
-
-                        pixels[pos] = origPixels[pos];
-                    }
-                }
+                pixels = processOriginal(pixels);
             }
 
             if (method.equals("Rot-Kanal")) {
-
-                for (int y=0; y<height; y++) {
-                    for (int x=0; x<width; x++) {
-                        int pos = y*width + x;
-                        int argb = origPixels[pos];  // Lesen der Originalwerte
-
-                        int r = (argb >> 16) & 0xff;
-                        //int g = (argb >>  8) & 0xff;
-                        //int b =  argb        & 0xff;
-
-                        int rn = r;
-                        int gn = 0;
-                        int bn = 0;
-
-                        // Hier muessen die neuen RGB-Werte wieder auf den Bereich von 0 bis 255 begrenzt werden
-
-                        pixels[pos] = (0xFF<<24) | (rn<<16) | (gn<<8) | bn;
-                    }
-                }
+                pixels = processRedChannel(pixels);
             }
 
+            if (method.equals("Graustufen")) {
+                pixels = processGrayscale(pixels);
+            }
 
+            if (method.equals("Binär")) {
+                pixels = processBinary(pixels);
+            }
 
+            if (method.equals("Binär mit Fehlerdiffusion")) {
+                pixels = processBinaryErrorDiffusion(pixels);
+            }
+
+            if (method.equals("Sepia")) {
+                pixels = processSepia(pixels);
+            }
         }
 
+        int[] processOriginal (int[] pixels) {
+            for (int y=0; y<height; y++) {
+                for (int x=0; x<width; x++) {
+                    int pos = y*width + x;
 
-    } // CustomWindow inner class
+                    pixels[pos] = origPixels[pos];
+                }
+            }
+            return pixels;
+        }
+
+        int[] processRedChannel (int[] pixels) {
+            for (int y=0; y<height; y++) {
+                for (int x=0; x<width; x++) {
+                    int pos = y*width + x;
+                    int argb = origPixels[pos];
+
+                    int r = (argb >> 16) & 0xff;
+
+                    int rn = r;
+                    int gn = 0;
+                    int bn = 0;
+
+                    pixels[pos] = (0xFF<<24) | (rn<<16) | (gn<<8) | bn;
+                }
+            }
+            return pixels;
+        }
+
+        int[] processGrayscale (int[] pixels) {
+            return pixels;
+        }
+
+        int[] processBinary (int[] pixels) {
+            return pixels;
+        }
+
+        int[] processBinaryErrorDiffusion (int[] pixels) {
+            return pixels;
+        }
+
+        int[] processSepia (int[] pixels) {
+            return pixels;
+        }
+    }
 }
