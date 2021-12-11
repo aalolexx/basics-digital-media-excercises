@@ -12,7 +12,7 @@ import ij.plugin.filter.*;
 public class GRDM_U4 implements PlugInFilter {
 
 	protected ImagePlus imp;
-	final static String[] choices = {"Wischen", "Weiche Blende", "Schieben", "Chroma Key", "Extra"};
+	final static String[] choices = {"Wischen", "Weiche Blende", "Schieben", "Chroma Key", "Extra", "Overlay"};
 
 	public int setup(String arg, ImagePlus imp) {
 		this.imp = imp;
@@ -79,7 +79,8 @@ public class GRDM_U4 implements PlugInFilter {
 		if (s.equals("Weiche Blende")) methode = 2;
 		if (s.equals("Schieben")) methode = 3;
 		if (s.equals("Chroma Key")) methode =4;
-		if (s.equals("Extra")) methode = 5;
+		if (s.equals("Extra (Quadrate)")) methode = 5;
+		if (s.equals("Overlay")) methode = 6;
 
 		// Arrays fuer die einzelnen Bilder
 		int[] pixels_B;
@@ -110,7 +111,7 @@ public class GRDM_U4 implements PlugInFilter {
 
 					if (methode == 1) {
 
-						if (x + 1 > (z - 1) * (double) width / (length - 1)) {
+						if (y + 1 > (z - 1) * (double) height / (length - 1)) {
 							pixels_Erg[pos] = pixels_B[pos];
 						} else {
 							pixels_Erg[pos] = pixels_A[pos];
@@ -189,6 +190,26 @@ public class GRDM_U4 implements PlugInFilter {
 								g = gA;
 							}
 						}
+
+						pixels_Erg[pos] = 0xFF000000 + ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
+
+					} else if (methode == 6) {
+
+						// Overlays überlagern
+						float pA = (float) progress / 100;
+						float pB = (float) (100 - progress) / 100;
+
+						int rOA = (int) Math.round((rA * 0.75 + rB * 0.25) / 2);
+						int gOA = (int) Math.round((gA * 0.75 + gB * 0.25) / 2);
+						int bOA = (int) Math.round((bA * 0.75 + bB * 0.25) / 2);
+
+						int rOB = (int) Math.round((rA * 0.25 + rB * 0.75) / 2);
+						int gOB = (int) Math.round((gA * 0.25 + gB * 0.75) / 2);
+						int bOB = (int) Math.round((bA * 0.25 + bB * 0.75) / 2);
+
+						int r = Math.round((rOA * pA + rOB * pB) / 2);
+						int g = Math.round((gOA * pA + gOB * pB) / 2);
+						int b = Math.round((bOA * pA + bOB * pB) / 2);
 
 						pixels_Erg[pos] = 0xFF000000 + ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
 
