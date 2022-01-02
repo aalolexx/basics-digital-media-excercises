@@ -129,22 +129,17 @@ public class GRDM_U5 implements PlugIn {
 			}
 			
 			if (method.equals("Weichzeichnung")) {
-
 				for (int y=0; y<height; y++) {
 					for (int x=0; x<width; x++) {
-						/*int pos = y*width + x;
-						int argb = origPixels[pos];  // Lesen der Originalwerte
+						pixels = applyMatrix(origPixels, pixels, x, y, matrix1, 0);
+					}
+				}
+			}
 
-						int r = (argb >> 16) & 0xff;
-						int g = (argb >>  8) & 0xff;
-						int b =  argb        & 0xff;
-
-						int rn = r/2;
-						int gn = g/2;
-						int bn = b/2;*/
-
-						//pixels[pos] = (0xFF<<24) | (rn<<16) | (gn << 8) | bn;
-						pixels = applyMatrix(origPixels, pixels, x, y, matrix1);
+			if (method.equals("Hochpass")) {
+				for (int y=0; y<height; y++) {
+					for (int x=0; x<width; x++) {
+						pixels = applyMatrix(origPixels, pixels, x, y, matrix2, 128);
 					}
 				}
 			}
@@ -152,17 +147,25 @@ public class GRDM_U5 implements PlugIn {
 	} // CustomWindow inner class
 
 	public void initializeMatrices () {
+
+		// Blur Matrix
 		matrix1 = new double[][] {
 				{1.0/9, 1.0/9, 1.0/9},
 				{1.0/9, 1.0/9, 1.0/9},
 				{1.0/9, 1.0/9, 1.0/9}
 		};
+
+		// Highpass Matrix
+		matrix2 = new double[][] {
+				{-1, -2.0, -1.0},
+				{-2.0, 12.0, -2.0},
+				{-1.0, -2.0, -1.0}
+		};
 	}
 
 
-	public int[] applyMatrix (int[] orgPixels, int[] pixels, int x, int y, double[][] operationMatrix) {
+	public int[] applyMatrix (int[] orgPixels, int[] pixels, int x, int y, double[][] operationMatrix, int offset) {
 		int pos = y*width + x;
-		int argb = origPixels[pos];
 
 		int[][] pixelMatrix;
 		if (x < width-1 && x > 1 && y < height-1 && y > 1) {
@@ -194,7 +197,17 @@ public class GRDM_U5 implements PlugIn {
 			}
 		}
 
+		rn = keepRange(rn + offset);
+		gn = keepRange(gn + offset);
+		bn = keepRange(bn + offset);
+
 		pixels[pos] = (0xFF<<24) | (rn<<16) | (gn << 8) | bn;
 		return pixels;
+	}
+
+	public int keepRange (int p) {
+		if (p > 255) return 255;
+		if (p < 0) return 0;
+		return p;
 	}
 } 
