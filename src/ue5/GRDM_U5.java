@@ -143,6 +143,14 @@ public class GRDM_U5 implements PlugIn {
 					}
 				}
 			}
+
+			if (method.equals("Geschärft")) {
+				for (int y=0; y<height; y++) {
+					for (int x=0; x<width; x++) {
+						pixels = applyMatrix(origPixels, pixels, x, y, matrix3, 0);
+					}
+				}
+			}
 		}
 	} // CustomWindow inner class
 
@@ -160,6 +168,13 @@ public class GRDM_U5 implements PlugIn {
 				{-1, -2.0, -1.0},
 				{-2.0, 12.0, -2.0},
 				{-1.0, -2.0, -1.0}
+		};
+
+		// Sharp Edges Matrix
+		matrix3 = new double[][] {
+				{-1.0/9, -1.0/9, -1.0/9},
+				{-1.0/9, 17.0/9, -1.0/9},
+				{-1.0/9, -1.0/9, -1.0/9}
 		};
 	}
 
