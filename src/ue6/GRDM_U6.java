@@ -91,12 +91,60 @@ public class GRDM_U6 implements PlugInFilter {
 
 
         } else if (interpolationChoice.equals("Bilinear")) {
-            
+
+            int counterSinceSameOldPixel = 0;
+            int lastOldPixelPos = 0;
+
+            for (int y_n = 0; y_n < height_n; y_n++) {
+                for (int x_n = 0; x_n < width_n; x_n++) {
+                    int pos_n = y_n * width_n + x_n;
+                    // get position of where to scan (abtasten) in the old image for the new one
+                    int oldPixelXPosition = Math.round(x_n / scaleXFactor);
+                    int oldPixelYPosition = Math.round(y_n / scaleYFactor);
+                    int oldPixelPosition = oldPixelYPosition * width + oldPixelXPosition;
+                    if (oldPixelPosition >= pix.length-1) oldPixelPosition = pix.length-2;
+
+                    // Now bilinearly interpolate the pixel with the next (old) pixel
+                    int oldColor1 = pix[oldPixelPosition];
+                    int oldColor2 = pix[oldPixelPosition + 1];
+
+                    // Find out (theoretical) range between the two new pixels compared to the old one
+                    if (lastOldPixelPos != Math.round(x_n / scaleXFactor)) {
+                        lastOldPixelPos = oldPixelXPosition;
+                        counterSinceSameOldPixel = 0;
+                    } else {
+                        counterSinceSameOldPixel++;
+                    }
+
+                    pix_n[pos_n] = bilinearInterpolate(oldColor1, oldColor2, scaleXFactor, counterSinceSameOldPixel);
+                }
+            }
+
         }
 
         // neues Bild anzeigen
         newImage.show();
         newImage.updateAndDraw();
+    }
+
+    private int mixColors(int color1, int color2, float alpha) {
+        int r1 = (color1 >> 16) & 0xff;
+        int g1 = (color1 >>  8) & 0xff;
+        int b1 =  color1        & 0xff;
+
+        int r2 = (color2 >> 16) & 0xff;
+        int g2 = (color2 >>  8) & 0xff;
+        int b2 =  color2        & 0xff;
+
+        int rn = Math.round(((float) r2 * alpha) + (float) r1 * (1 - alpha));
+        int gn = Math.round(((float) g2 * alpha) + (float) g1 * (1 - alpha));
+        int bn = Math.round(((float) b2 * alpha) + (float) b1 * (1 - alpha));
+
+        return (0xFF<<24) | (rn<<16) | (gn<<8) | bn;
+    }
+
+    private int bilinearInterpolate (int color1, int color2, float range, int current) {
+        return mixColors(color1, color2, ((float)current / range));
     }
 
     void showAbout() {
