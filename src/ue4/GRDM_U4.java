@@ -107,7 +107,7 @@ public class GRDM_U4 implements PlugInFilter {
 					int gB = (cB & 0x00ff00) >> 8;
 					int bB = (cB & 0x0000ff);
 
-					int progress = 100 / length * z;
+					int progress = length / 100 * z;
 
 					if (methode == 1) {
 
